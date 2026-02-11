@@ -1,0 +1,41 @@
+# Large files - audio and models
+audio_files/
+whisper_models/
+transcriptions/
+
+# Dependencies
+node_modules/
+
+# Confidential information
+.credentials.json
+.session_cookies.json
+demographic_export*.csv
+transcription_answers.csv
+transcriptions_combined.tsv
+extracted_audio_links.txt
+
+# Generated files
+download_audio.sh
+debug_page.html
+debug_screenshot.png
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.so
+
+# Jupyter Notebook checkpoints
+.ipynb_checkpoints/
+
+# Environment files
+.env
+.venv
+env/
+venv/
+
+# OS files
+.DS_Store
+Thumbs.db

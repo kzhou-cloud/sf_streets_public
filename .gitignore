@@ -1,0 +1,68 @@
+# Audio files
+*.webm
+*.wav
+*.mp3
+audio_files/
+audio_files_copy/
+
+# Data files (may contain participant IDs)
+*.tsv
+*.csv
+
+# Model files
+whisper_models/
+*.pt
+*.bin
+*.safetensors
+*.arrow
+
+# Training runs and logs
+runs/
+logs/
+wandb/
+
+# Credentials and API keys
+.credentials.json
+.session_cookies.json
+*api_key.txt
+*api_key.csv
+wandb.csv
+*.pem
+*.key
+
+# Google Cloud service account files
+sfstreets-*.json
+
+# Node modules
+node_modules/
+package-lock.json
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.so
+*.egg
+*.egg-info/
+dist/
+build/
+
+# Jupyter Notebook checkpoints
+.ipynb_checkpoints/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Environment files
+.env
+.env.local

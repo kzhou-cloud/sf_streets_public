@@ -1,0 +1,1129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>"Sorry, I Didn't Catch That": How Speech Models Miss What Matters Most</title>
+  <meta name="description" content="We evaluate 15 speech recognition models on U.S. street name transcription and find a 44% error rate, disproportionately affecting non-English primary speakers.">
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Source+Serif+4:ital,wght@0,400;0,600;0,700;1,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+  <!-- Academicons & Font Awesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/academicons/1.9.4/css/academicons.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+  <style>
+    :root {
+      --color-bg: #fafaf9;
+      --color-surface: #ffffff;
+      --color-text: #1c1917;
+      --color-text-secondary: #57534e;
+      --color-text-muted: #a8a29e;
+      --color-accent: #dc2626;
+      --color-accent-light: #fef2f2;
+      --color-accent-dark: #991b1b;
+      --color-blue: #2563eb;
+      --color-blue-light: #eff6ff;
+      --color-green: #059669;
+      --color-green-light: #ecfdf5;
+      --color-amber: #d97706;
+      --color-amber-light: #fffbeb;
+      --color-border: #e7e5e4;
+      --color-border-light: #f5f5f4;
+      --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      --font-serif: 'Source Serif 4', Georgia, serif;
+      --font-mono: 'JetBrains Mono', monospace;
+      --max-width: 900px;
+      --section-gap: 5rem;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: var(--font-sans);
+      color: var(--color-text);
+      background: var(--color-bg);
+      line-height: 1.7;
+      font-size: 16px;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ---- Nav ---- */
+    nav {
+      position: fixed;
+      top: 0;
+      width: 100%;
+      z-index: 100;
+      background: rgba(250, 250, 249, 0.85);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--color-border);
+      transition: box-shadow 0.3s;
+    }
+    nav.scrolled { box-shadow: 0 1px 8px rgba(0,0,0,0.06); }
+    .nav-inner {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 0 2rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 56px;
+    }
+    .nav-title {
+      font-weight: 700;
+      font-size: 0.85rem;
+      color: var(--color-text);
+      letter-spacing: -0.01em;
+    }
+    .nav-links { display: flex; gap: 1.75rem; }
+    .nav-links a {
+      font-size: 0.82rem;
+      font-weight: 500;
+      color: var(--color-text-secondary);
+      text-decoration: none;
+      transition: color 0.2s;
+    }
+    .nav-links a:hover { color: var(--color-accent); }
+
+    /* ---- Hero ---- */
+    .hero {
+      padding: 9rem 2rem 4rem;
+      text-align: center;
+      max-width: var(--max-width);
+      margin: 0 auto;
+    }
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      background: var(--color-accent-light);
+      color: var(--color-accent);
+      font-size: 0.78rem;
+      font-weight: 600;
+      padding: 0.35rem 1rem;
+      border-radius: 100px;
+      margin-bottom: 1.5rem;
+      letter-spacing: 0.02em;
+      text-transform: uppercase;
+    }
+    .hero h1 {
+      font-family: var(--font-serif);
+      font-size: 2.8rem;
+      font-weight: 700;
+      line-height: 1.2;
+      letter-spacing: -0.02em;
+      color: var(--color-text);
+      margin-bottom: 1.5rem;
+    }
+    .hero h1 .subtitle {
+      display: block;
+      font-size: 1.6rem;
+      font-weight: 400;
+      color: var(--color-text-secondary);
+      margin-top: 0.5rem;
+    }
+    .authors {
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 0.25rem 1.5rem;
+      margin-bottom: 0.75rem;
+    }
+    .authors a {
+      font-size: 1.05rem;
+      font-weight: 500;
+      color: var(--color-text);
+      text-decoration: none;
+      transition: color 0.2s;
+    }
+    .authors a:hover { color: var(--color-accent); }
+    .authors .author-sup { font-size: 0.7rem; vertical-align: super; color: var(--color-accent); }
+    .affiliations {
+      font-size: 0.88rem;
+      color: var(--color-text-muted);
+      margin-bottom: 2rem;
+    }
+    .hero-links {
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+      margin-top: 2rem;
+    }
+    .hero-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.65rem 1.4rem;
+      border-radius: 8px;
+      font-size: 0.88rem;
+      font-weight: 600;
+      text-decoration: none;
+      transition: all 0.2s;
+    }
+    .hero-btn.primary {
+      background: var(--color-text);
+      color: #fff;
+    }
+    .hero-btn.primary:hover { background: #292524; transform: translateY(-1px); }
+    .hero-btn.secondary {
+      background: var(--color-surface);
+      color: var(--color-text);
+      border: 1px solid var(--color-border);
+    }
+    .hero-btn.secondary:hover { border-color: #d6d3d1; background: var(--color-border-light); }
+
+    /* ---- TLDR / Highlight Banner ---- */
+    .tldr {
+      max-width: var(--max-width);
+      margin: 0 auto 1rem;
+      padding: 0 2rem;
+    }
+    .tldr-card {
+      background: linear-gradient(135deg, #1c1917, #292524);
+      border-radius: 16px;
+      padding: 2.5rem 2.5rem;
+      color: #fff;
+    }
+    .tldr-card h2 {
+      font-size: 0.8rem;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.5);
+      margin-bottom: 1rem;
+    }
+    .tldr-card p {
+      font-family: var(--font-serif);
+      font-size: 1.2rem;
+      line-height: 1.7;
+      color: rgba(255,255,255,0.92);
+    }
+    .tldr-card strong { color: #fbbf24; font-weight: 600; }
+
+    /* ---- Section ---- */
+    section {
+      max-width: var(--max-width);
+      margin: 0 auto;
+      padding: var(--section-gap) 2rem;
+    }
+    .section-label {
+      font-size: 0.75rem;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--color-accent);
+      margin-bottom: 0.75rem;
+    }
+    section h2 {
+      font-family: var(--font-serif);
+      font-size: 2rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      margin-bottom: 1.25rem;
+    }
+    section h3 {
+      font-family: var(--font-serif);
+      font-size: 1.35rem;
+      font-weight: 600;
+      margin-bottom: 0.75rem;
+      margin-top: 2rem;
+    }
+    section p {
+      color: var(--color-text-secondary);
+      font-size: 1.02rem;
+      margin-bottom: 1rem;
+    }
+    section p.lead {
+      font-size: 1.12rem;
+      line-height: 1.8;
+    }
+
+    /* ---- Stat Cards ---- */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 1rem;
+      margin: 2.5rem 0;
+    }
+    .stat-card {
+      background: var(--color-surface);
+      border: 1px solid var(--color-border);
+      border-radius: 12px;
+      padding: 1.5rem;
+      text-align: center;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .stat-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 20px rgba(0,0,0,0.06);
+    }
+    .stat-number {
+      font-size: 2.2rem;
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      line-height: 1.1;
+    }
+    .stat-number.red { color: var(--color-accent); }
+    .stat-number.blue { color: var(--color-blue); }
+    .stat-number.green { color: var(--color-green); }
+    .stat-number.amber { color: var(--color-amber); }
+    .stat-label {
+      font-size: 0.82rem;
+      color: var(--color-text-muted);
+      margin-top: 0.5rem;
+      line-height: 1.4;
+    }
+
+    /* ---- Findings Cards ---- */
+    .findings-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.25rem;
+      margin: 2rem 0;
+    }
+    .finding-card {
+      border: 1px solid var(--color-border);
+      border-radius: 14px;
+      padding: 1.75rem;
+      background: var(--color-surface);
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .finding-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 30px rgba(0,0,0,0.06);
+    }
+    .finding-card.full { grid-column: 1 / -1; }
+    .finding-icon {
+      width: 42px;
+      height: 42px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.15rem;
+      margin-bottom: 1rem;
+    }
+    .finding-icon.red { background: var(--color-accent-light); color: var(--color-accent); }
+    .finding-icon.blue { background: var(--color-blue-light); color: var(--color-blue); }
+    .finding-icon.green { background: var(--color-green-light); color: var(--color-green); }
+    .finding-icon.amber { background: var(--color-amber-light); color: var(--color-amber); }
+    .finding-card h3 {
+      font-family: var(--font-sans);
+      font-size: 1.05rem;
+      font-weight: 700;
+      margin: 0 0 0.5rem;
+    }
+    .finding-card p {
+      font-size: 0.92rem;
+      color: var(--color-text-secondary);
+      margin: 0;
+      line-height: 1.65;
+    }
+
+    /* ---- Comparison Bar ---- */
+    .comparison-section {
+      margin: 2.5rem 0;
+    }
+    .comparison-row {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      margin-bottom: 1.25rem;
+    }
+    .comparison-label {
+      font-size: 0.88rem;
+      font-weight: 600;
+      min-width: 200px;
+      text-align: right;
+    }
+    .comparison-bar-bg {
+      flex: 1;
+      height: 36px;
+      background: var(--color-border-light);
+      border-radius: 8px;
+      overflow: hidden;
+      position: relative;
+    }
+    .comparison-bar {
+      height: 100%;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      padding-left: 12px;
+      font-size: 0.82rem;
+      font-weight: 700;
+      color: #fff;
+      transition: width 1.5s ease-out;
+    }
+    .comparison-bar.english { background: var(--color-blue); }
+    .comparison-bar.non-english { background: var(--color-accent); }
+
+    /* ---- Impact Section ---- */
+    .impact-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.25rem;
+      margin: 2rem 0;
+    }
+    .impact-card {
+      border-radius: 14px;
+      padding: 2rem;
+      position: relative;
+      overflow: hidden;
+    }
+    .impact-card.dark {
+      background: linear-gradient(135deg, #1c1917, #44403c);
+      color: #fff;
+    }
+    .impact-card.dark p { color: rgba(255,255,255,0.7); }
+    .impact-card.light {
+      background: var(--color-surface);
+      border: 1px solid var(--color-border);
+    }
+    .impact-number {
+      font-size: 2.8rem;
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      line-height: 1;
+      margin-bottom: 0.5rem;
+    }
+    .impact-card.dark .impact-number { color: #fbbf24; }
+    .impact-card.light .impact-number { color: var(--color-accent); }
+    .impact-card h4 {
+      font-size: 0.95rem;
+      font-weight: 700;
+      margin-bottom: 0.25rem;
+    }
+    .impact-card p {
+      font-size: 0.85rem;
+      margin: 0;
+    }
+
+    /* ---- Dataset Table ---- */
+    .dataset-table-wrapper {
+      overflow-x: auto;
+      margin: 2rem 0;
+      border-radius: 12px;
+      border: 1px solid var(--color-border);
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.88rem;
+    }
+    thead th {
+      background: var(--color-border-light);
+      padding: 0.85rem 1.25rem;
+      text-align: left;
+      font-weight: 700;
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--color-text-secondary);
+      border-bottom: 1px solid var(--color-border);
+    }
+    tbody td {
+      padding: 0.75rem 1.25rem;
+      border-bottom: 1px solid var(--color-border-light);
+      color: var(--color-text-secondary);
+    }
+    tbody tr:last-child td { border-bottom: none; }
+    tbody tr:hover { background: var(--color-border-light); }
+    td .tag {
+      display: inline-block;
+      padding: 0.15rem 0.55rem;
+      border-radius: 6px;
+      font-size: 0.75rem;
+      font-weight: 600;
+    }
+    .tag.sf { background: var(--color-blue-light); color: var(--color-blue); }
+    .tag.us { background: var(--color-green-light); color: var(--color-green); }
+
+    /* ---- Citation ---- */
+    .citation-block {
+      background: #1c1917;
+      color: #e7e5e4;
+      font-family: var(--font-mono);
+      font-size: 0.82rem;
+      line-height: 1.75;
+      padding: 1.75rem 2rem;
+      border-radius: 12px;
+      position: relative;
+      overflow-x: auto;
+      margin: 1.5rem 0;
+    }
+    .citation-block .copy-btn {
+      position: absolute;
+      top: 1rem;
+      right: 1rem;
+      background: rgba(255,255,255,0.1);
+      border: 1px solid rgba(255,255,255,0.15);
+      color: #a8a29e;
+      padding: 0.35rem 0.75rem;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.75rem;
+      font-family: var(--font-sans);
+      font-weight: 600;
+      transition: all 0.2s;
+    }
+    .citation-block .copy-btn:hover { background: rgba(255,255,255,0.2); color: #fff; }
+
+    /* ---- Footer ---- */
+    footer {
+      text-align: center;
+      padding: 3rem 2rem 4rem;
+      border-top: 1px solid var(--color-border);
+      margin-top: 2rem;
+    }
+    footer p {
+      font-size: 0.85rem;
+      color: var(--color-text-muted);
+    }
+    footer a {
+      color: var(--color-text-secondary);
+      text-decoration: none;
+    }
+    footer a:hover { color: var(--color-accent); }
+
+    /* ---- Divider ---- */
+    .divider {
+      max-width: var(--max-width);
+      margin: 0 auto;
+      padding: 0 2rem;
+    }
+    .divider hr {
+      border: none;
+      border-top: 1px solid var(--color-border);
+    }
+
+    /* ---- Street Names Display ---- */
+    .street-names-cloud {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      margin: 1.5rem 0;
+      justify-content: center;
+    }
+    .street-tag {
+      padding: 0.4rem 0.85rem;
+      background: var(--color-surface);
+      border: 1px solid var(--color-border);
+      border-radius: 8px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--color-text-secondary);
+      transition: all 0.2s;
+      cursor: default;
+    }
+    .street-tag:hover {
+      background: var(--color-accent-light);
+      border-color: var(--color-accent);
+      color: var(--color-accent);
+    }
+
+    /* ---- Model Results ---- */
+    .model-results {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 0.75rem;
+      margin: 2rem 0;
+    }
+    .model-chip {
+      background: var(--color-surface);
+      border: 1px solid var(--color-border);
+      border-radius: 10px;
+      padding: 1rem;
+      text-align: center;
+      transition: all 0.2s;
+    }
+    .model-chip:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+    }
+    .model-chip .provider {
+      font-size: 0.68rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--color-text-muted);
+      margin-bottom: 0.25rem;
+    }
+    .model-chip .model-name {
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--color-text);
+    }
+
+    /* ---- Responsive ---- */
+    @media (max-width: 768px) {
+      .hero h1 { font-size: 2rem; }
+      .hero h1 .subtitle { font-size: 1.2rem; }
+      .stats-grid { grid-template-columns: repeat(2, 1fr); }
+      .findings-grid { grid-template-columns: 1fr; }
+      .impact-grid { grid-template-columns: 1fr; }
+      .model-results { grid-template-columns: repeat(2, 1fr); }
+      .comparison-row { flex-direction: column; align-items: stretch; }
+      .comparison-label { text-align: left; min-width: unset; }
+      .nav-links { display: none; }
+    }
+    @media (max-width: 480px) {
+      .hero h1 { font-size: 1.6rem; }
+      .stats-grid { grid-template-columns: 1fr 1fr; }
+    }
+
+    /* ---- Figure ---- */
+    .figure {
+      margin: 2.5rem 0;
+      text-align: center;
+    }
+    .figure.wide {
+      margin-left: -100px;
+      margin-right: -100px;
+    }
+    @media (max-width: 1100px) {
+      .figure.wide {
+        margin-left: 0;
+        margin-right: 0;
+      }
+    }
+    .figure img {
+      width: 100%;
+      max-width: 100%;
+      height: auto;
+      border-radius: 12px;
+      border: 1px solid var(--color-border);
+      background: #fff;
+      box-shadow: 0 2px 16px rgba(0,0,0,0.04);
+      transition: box-shadow 0.3s;
+    }
+    .figure img:hover {
+      box-shadow: 0 8px 40px rgba(0,0,0,0.08);
+    }
+    .figure.no-border img {
+      border: none;
+      box-shadow: none;
+      border-radius: 16px;
+    }
+    .figure.no-border img:hover {
+      box-shadow: none;
+    }
+    .figure figcaption {
+      margin-top: 0.85rem;
+      font-size: 0.85rem;
+      color: var(--color-text-muted);
+      line-height: 1.55;
+      max-width: 700px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+    .figure figcaption strong {
+      color: var(--color-text-secondary);
+      font-weight: 600;
+    }
+
+    /* ---- Scroll Animation ---- */
+    .reveal {
+      opacity: 0;
+      transform: translateY(24px);
+      transition: opacity 0.6s ease, transform 0.6s ease;
+    }
+    .reveal.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Navigation -->
+  <nav id="navbar">
+    <div class="nav-inner">
+      <span class="nav-title">SF Streets</span>
+      <div class="nav-links">
+        <a href="#findings">Findings</a>
+        <a href="#disparity">Disparity</a>
+        <a href="#impact">Impact</a>
+        <a href="#mitigation">Mitigation</a>
+        <a href="#datasets">Datasets</a>
+        <a href="#citation">Citation</a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Hero -->
+  <header class="hero">
+    <div class="hero-badge">
+      <i class="fa-solid fa-microphone"></i>
+      Preprint &middot; February 2026
+    </div>
+    <h1>
+      "Sorry, I Didn't Catch That"
+      <span class="subtitle">How Speech Models Miss What Matters Most</span>
+    </h1>
+    <div class="authors">
+      <span><a href="mailto:kzhou@together.ai">Kaitlyn Zhou</a><span class="author-sup">1,2</span></span>
+      <span><a href="#">Martijn Bartelds</a><span class="author-sup">1,3</span></span>
+      <span><a href="#">Federico Bianchi</a><span class="author-sup">1</span></span>
+      <span><a href="#">James Zou</a><span class="author-sup">1,3</span></span>
+    </div>
+    <div class="affiliations">
+      <sup>1</sup>TogetherAI &nbsp;&middot;&nbsp; <sup>2</sup>Cornell University &nbsp;&middot;&nbsp; <sup>3</sup>Stanford University
+    </div>
+
+    <div class="hero-links">
+      <a class="hero-btn primary" href="#" target="_blank">
+        <i class="fa-solid fa-file-pdf"></i> Paper
+      </a>
+      <a class="hero-btn secondary" href="https://github.com/kzhou/sf_streets_public" target="_blank">
+        <i class="fa-brands fa-github"></i> Code
+      </a>
+      <a class="hero-btn secondary" href="#datasets">
+        <i class="fa-solid fa-database"></i> Datasets
+      </a>
+      <a class="hero-btn secondary" href="#citation">
+        <i class="fa-solid fa-quote-left"></i> Cite
+      </a>
+    </div>
+  </header>
+
+  <!-- TLDR -->
+  <div class="tldr reveal">
+    <div class="tldr-card">
+      <h2>TL;DR</h2>
+      <p>
+        We evaluate <strong>15 speech recognition models</strong> from OpenAI, Deepgram, Google, and Microsoft on recordings of U.S. street names from linguistically diverse speakers. 
+        Models fail on <strong>44% of street names</strong> overall, with <strong>non-English primary speakers</strong> experiencing a near <strong>54% error rate</strong>. 
+        Mis-transcriptions cause routing errors <strong>2&times; larger</strong> for non-English speakers. 
+        Fine-tuning with <strong>&lt;1000 synthetic samples</strong> improves accuracy by up to <strong>71%</strong>.
+      </p>
+    </div>
+  </div>
+
+  <!-- Overview Figure -->
+  <section class="reveal" style="padding-bottom: 0;">
+    <figure class="figure no-border">
+      <img src="figures/fig1_pipeline_overview.png" alt="Overview of Transcription Evaluation Pipeline: 29 SF streets spoken by 78 participants across 13 languages, producing 2,262 utterances evaluated by 15 ASR models with a 39% error rate" loading="lazy">
+      <figcaption><strong>Figure 1.</strong> Overview of evaluation pipeline. 29 San Francisco boulevard names are spoken by 78 linguistically diverse participants, producing 2,262 utterances. These are transcribed by 15 ASR models, revealing a 39% transcription error rate.</figcaption>
+    </figure>
+  </section>
+
+  <!-- Key Stats -->
+  <section id="findings" class="reveal">
+    <div class="section-label">Key Numbers</div>
+    <h2>The Scale of the Problem</h2>
+    <p class="lead">
+      Despite achieving low word error rates on standard benchmarks, state-of-the-art speech recognition systems 
+      frequently fail on short, high-stakes utterances in real-world deployments.
+    </p>
+
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-number red">44%</div>
+        <div class="stat-label">Average street name<br>transcription error rate</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-number amber">15</div>
+        <div class="stat-label">Models evaluated from<br>4 major providers</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-number blue">5,862</div>
+        <div class="stat-label">Voice recordings across<br>two benchmark datasets</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-number green">71%</div>
+        <div class="stat-label">Relative improvement<br>with synthetic finetuning</div>
+      </div>
+    </div>
+  </section>
+
+  <div class="divider"><hr></div>
+
+  <!-- Models Evaluated -->
+  <section class="reveal">
+    <div class="section-label">Evaluation</div>
+    <h2>Models Under the Microscope</h2>
+    <p>We evaluate models from the four top-performing speech recognition providers, including production-grade systems
+      explicitly tuned for telephony and phone-call scenarios.</p>
+
+    <div class="model-results">
+      <div class="model-chip"><div class="provider">OpenAI</div><div class="model-name">Whisper Tiny</div></div>
+      <div class="model-chip"><div class="provider">OpenAI</div><div class="model-name">Whisper Base</div></div>
+      <div class="model-chip"><div class="provider">OpenAI</div><div class="model-name">Whisper Small</div></div>
+      <div class="model-chip"><div class="provider">OpenAI</div><div class="model-name">Whisper Medium</div></div>
+      <div class="model-chip"><div class="provider">OpenAI</div><div class="model-name">Whisper Large</div></div>
+      <div class="model-chip"><div class="provider">Deepgram</div><div class="model-name">Nova-2</div></div>
+      <div class="model-chip"><div class="provider">Deepgram</div><div class="model-name">Nova-3</div></div>
+      <div class="model-chip"><div class="provider">Deepgram</div><div class="model-name">Telephony</div></div>
+      <div class="model-chip"><div class="provider">Deepgram</div><div class="model-name">Base Phonecall</div></div>
+      <div class="model-chip"><div class="provider">Deepgram</div><div class="model-name">Base General</div></div>
+      <div class="model-chip"><div class="provider">Deepgram</div><div class="model-name">Enhanced General</div></div>
+      <div class="model-chip"><div class="provider">Deepgram</div><div class="model-name">Enhanced Phonecall</div></div>
+      <div class="model-chip"><div class="provider">Microsoft</div><div class="model-name">Phi-4 Multimodal</div></div>
+      <div class="model-chip"><div class="provider">Google</div><div class="model-name">Chirp 2</div></div>
+      <div class="model-chip"><div class="provider">Google</div><div class="model-name">Chirp 3</div></div>
+    </div>
+
+    <p style="text-align:center; font-size: 0.88rem; color: var(--color-text-muted);">
+      Many of these models are deployed in production at scale&mdash;from ride-hailing to emergency dispatch systems.
+    </p>
+  </section>
+
+  <div class="divider"><hr></div>
+
+  <!-- Core Findings -->
+  <section class="reveal">
+    <div class="section-label">Core Findings</div>
+    <h2>Street Names Are a Blind Spot</h2>
+    <p class="lead">
+      Even when overall word error rate (WER) is low, models fail disproportionately on the named entities 
+      that carry the most operational importance.
+    </p>
+
+    <figure class="figure">
+      <img src="figures/fig3_accuracy_by_model.png" alt="Transcription accuracy by prompt type with 95% confidence intervals, showing accuracy increasing with model size but plateauing around 76% even with complete knowledge of street names" loading="lazy">
+      <figcaption><strong>Figure 3.</strong> Overall transcription accuracy on SF Streets. Even supplying the full list of 29 target street names in the prompt (purple) yields only ~76% accuracy. Adding a contextual prompt (orange) provides marginal improvement over no prompt (blue).</figcaption>
+    </figure>
+
+    <div class="findings-grid">
+      <div class="finding-card">
+        <div class="finding-icon red"><i class="fa-solid fa-triangle-exclamation"></i></div>
+        <h3>High Error Rates Across the Board</h3>
+        <p>Whisper-Base achieves only ~50% accuracy on SF street names. Even Whisper-Large (1.5B params) reaches just ~73%, but at 7&times; the inference cost.</p>
+      </div>
+      <div class="finding-card">
+        <div class="finding-icon blue"><i class="fa-solid fa-magnifying-glass-chart"></i></div>
+        <h3>Low WER ≠ Accurate Transcription</h3>
+        <p>Whisper-Large has just 14% overall WER, yet its street name transcription error rate is 27%. Standard metrics hide critical failures.</p>
+      </div>
+      <div class="finding-card">
+        <div class="finding-icon amber"><i class="fa-solid fa-comment-dots"></i></div>
+        <h3>Context Doesn't Help Much</h3>
+        <p>Adding situational prompts like "The user is going to give you their location" yields almost no improvement in accuracy.</p>
+      </div>
+      <div class="finding-card">
+        <div class="finding-icon green"><i class="fa-solid fa-list-check"></i></div>
+        <h3>Perfect Knowledge Still Fails</h3>
+        <p>Even when models are given the exact set of 29 possible street names, average accuracy is only 76%. The bottleneck is recognition, not knowledge.</p>
+      </div>
+    </div>
+  </section>
+
+  <div class="divider"><hr></div>
+
+  <!-- Disparity -->
+  <section id="disparity" class="reveal">
+    <div class="section-label">Demographic Disparity</div>
+    <h2>Who Gets Left Behind?</h2>
+    <p class="lead">
+      Transcription errors are not distributed equally. Non-English primary speakers experience 
+      systematically worse performance across every model family.
+    </p>
+
+    <figure class="figure wide">
+      <img src="figures/fig4_accuracy_by_language.png" alt="Transcription accuracy by model family and language group showing systematic accuracy drops for Non-English speakers across Whisper, Deepgram, Phi-4, and Google models" loading="lazy">
+      <figcaption><strong>Figure 4.</strong> Transcription accuracy by language group across all model families (with 95% bootstrap CIs). English-only speakers (blue) consistently outperform multilingual (orange) and non-English speakers (purple) across every model variant.</figcaption>
+    </figure>
+
+    <div class="comparison-section">
+      <h3 style="text-align:center; margin-bottom: 2rem; font-size: 1.15rem;">
+        Transcription Accuracy by Language Group
+      </h3>
+      <div class="comparison-row">
+        <div class="comparison-label">English-Only Speakers</div>
+        <div class="comparison-bar-bg">
+          <div class="comparison-bar english" style="width: 64%">64% accuracy</div>
+        </div>
+      </div>
+      <div class="comparison-row">
+        <div class="comparison-label">Non-English Speakers</div>
+        <div class="comparison-bar-bg">
+          <div class="comparison-bar non-english" style="width: 46%">46% accuracy</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="findings-grid" style="margin-top: 2.5rem;">
+      <div class="finding-card full" style="background: var(--color-accent-light); border-color: transparent;">
+        <div style="display: flex; align-items: flex-start; gap: 1.25rem;">
+          <div class="finding-icon red" style="flex-shrink: 0;"><i class="fa-solid fa-scale-unbalanced"></i></div>
+          <div>
+            <h3 style="margin-top: 0;">18-Point Accuracy Gap</h3>
+            <p>Across all model families, non-English primary speakers exhibit 18% lower accuracy compared to English-only primary speakers. This pattern holds for OpenAI, Deepgram, Google, and Microsoft models alike. The participants' primary languages span 13 unique languages including Vietnamese, Spanish, Arabic, Chinese, Korean, Tagalog, and more.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="divider"><hr></div>
+
+  <!-- Real-World Impact -->
+  <section id="impact" class="reveal">
+    <div class="section-label">Real-World Impact</div>
+    <h2>When Errors Have Consequences</h2>
+    <p class="lead">
+      We query the Google Maps API using model transcriptions to measure the geographic and financial 
+      downstream effects of transcription failures.
+    </p>
+
+    <div class="impact-grid">
+      <div class="impact-card dark">
+        <div class="impact-number">1.26 mi</div>
+        <h4>Average Misroute Distance</h4>
+        <p>The average passenger pickup in SF is misrouted by 1.26 miles due to transcription errors&mdash;about 5 minutes of city driving.</p>
+      </div>
+      <div class="impact-card dark">
+        <div class="impact-number">2&times;</div>
+        <h4>Disparity Multiplier</h4>
+        <p>Non-English speakers experience routing errors nearly twice as large: 2.4 miles vs 1.26 miles for English speakers.</p>
+      </div>
+      <div class="impact-card light">
+        <div class="impact-number">43K hrs</div>
+        <h4>Annual Avoidable Delay</h4>
+        <p>Estimated cumulative delay per year in San Francisco alone&mdash;equivalent to ~5 years of continuous waiting time.</p>
+      </div>
+      <div class="impact-card light">
+        <div class="impact-number">$2.1M</div>
+        <h4>Annual Economic Cost</h4>
+        <p>Conservative estimate of economic cost from transcription-induced misrouting, using standard taxi fare schedules.</p>
+      </div>
+    </div>
+
+    <p style="margin-top: 1.5rem; font-size: 0.88rem; color: var(--color-text-muted); text-align: center;">
+      These estimates assume all riders are English-primary speakers and represent a <em>lower bound</em> on the true cost.
+    </p>
+  </section>
+
+  <div class="divider"><hr></div>
+
+  <!-- Mitigation -->
+  <section id="mitigation" class="reveal">
+    <div class="section-label">Mitigation</div>
+    <h2>A Scalable Fix with Synthetic Data</h2>
+    <p class="lead">
+      We introduce a synthetic data generation approach that produces diverse pronunciations of street names 
+      using open-source text-to-speech models. Fine-tuning with fewer than 1,000 samples yields dramatic improvements.
+    </p>
+
+    <figure class="figure no-border">
+      <img src="figures/fig6_synthetic_pipeline.png" alt="Synthetic training data generation pipeline: select voice samples from Common Voice, use XTTS to clone voices, inject English street names into foreign language speech, extract and validate" loading="lazy">
+      <figcaption><strong>Figure 6.</strong> Synthetic data generation pipeline. Voice samples from Common Voice are cloned via XTTS. The model generates foreign-language speech with embedded English street names (e.g., "Me llamo... <em>Washington</em>"), and the street name audio is automatically extracted.</figcaption>
+    </figure>
+
+    <figure class="figure" style="margin-top: 3rem;">
+      <img src="figures/fig7_finetuning_results.png" alt="Bar chart showing finetuned model accuracy vs baseline across language groups: English Only 57% to 79%, Non-English 36% to 78%, Multilingual 49% to 78%" loading="lazy" style="max-width: 520px;">
+      <figcaption><strong>Figure 7.</strong> Improvement from fine-tuning Whisper-Base with synthetic data. Non-English speakers see a 71% relative improvement (0.36 → 0.78). Multilingual speakers improve by 27%. English-only speakers see gains with no regressions. Confidence intervals via bootstrap resampling (n=10,000).</figcaption>
+    </figure>
+
+    <div class="findings-grid" style="margin-top: 2.5rem;">
+      <div class="finding-card">
+        <div class="finding-icon green"><i class="fa-solid fa-arrow-trend-up"></i></div>
+        <h3>71% Relative Improvement</h3>
+        <p>Non-English primary speakers see up to 71% relative improvement in street name transcription accuracy after fine-tuning with synthetic data.</p>
+      </div>
+      <div class="finding-card">
+        <div class="finding-icon blue"><i class="fa-solid fa-language"></i></div>
+        <h3>Cross-Language Generalization</h3>
+        <p>Improvements generalize even to languages not in the training data (e.g., Vietnamese speakers benefit from training on other languages).</p>
+      </div>
+      <div class="finding-card">
+        <div class="finding-icon amber"><i class="fa-solid fa-shield-halved"></i></div>
+        <h3>No Regressions</h3>
+        <p>English-only speakers maintain their baseline performance&mdash;gains for non-English speakers come without harming existing accuracy.</p>
+      </div>
+      <div class="finding-card">
+        <div class="finding-icon red"><i class="fa-solid fa-cubes"></i></div>
+        <h3>Open-Source & Reproducible</h3>
+        <p>The entire pipeline uses open-source models (Coqui XTTS) and public datasets (Common Voice), making it accessible for practitioners.</p>
+      </div>
+    </div>
+
+    <div class="finding-card full" style="margin-top: 1.5rem; background: var(--color-green-light); border: 1px solid transparent;">
+      <div style="display: flex; align-items: flex-start; gap: 1.25rem;">
+        <div class="finding-icon green" style="flex-shrink: 0;"><i class="fa-solid fa-lightbulb"></i></div>
+        <div>
+          <h3 style="margin-top: 0;">Key Insight: Language as Style Transfer</h3>
+          <p>Voice cloning models normalize accents when generating English. Our breakthrough was to generate speech in a <strong>non-English language</strong> while selectively inserting English street names. For example, generating Italian speech for <em>"Buongiorno, mi chiamo... Washington"</em> and isolating the English word, which inherits the Italian phonetic style. This produces diverse, naturalistic pronunciation variants without mimicking stereotypical accents.</p>
+        </div>
+      </div>
+    </div>
+
+    <figure class="figure wide" style="margin-top: 3rem;">
+      <img src="figures/fig8_accuracy_model_sizes.png" alt="Finetuned vs baseline accuracy across all Whisper model sizes (tiny through large), showing consistent gains for non-English and multilingual speakers at every scale" loading="lazy">
+      <figcaption><strong>Figure 8.</strong> Accuracy gains from fine-tuning hold across all Whisper model sizes (tiny through large). Non-English and multilingual speakers see consistent improvements at every scale, with no regressions for English-only speakers.</figcaption>
+    </figure>
+
+    <figure class="figure wide" style="margin-top: 2.5rem;">
+      <img src="figures/fig10_language_heatmap.png" alt="Heatmap of finetuned improvement rate by training language versus primary language, showing that training on all languages combined yields the highest gains" loading="lazy">
+      <figcaption><strong>Figure 10.</strong> Fine-tuned improvement rate by synthetic training language (rows) &times; speaker primary language (columns). Training on all 16 languages combined (top row) yields the best overall gains. Russian, Arabic, and German contribute the largest individual-language improvements.</figcaption>
+    </figure>
+  </section>
+
+  <div class="divider"><hr></div>
+
+  <!-- Datasets -->
+  <section id="datasets" class="reveal">
+    <div class="section-label">Benchmark Datasets</div>
+    <h2>Two New Datasets for the Community</h2>
+    <p class="lead">
+      We release both datasets as benchmarks to enable future research on named entity recognition in speech systems.
+    </p>
+
+    <div class="dataset-table-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th>Dataset</th>
+            <th>Participants</th>
+            <th>Utterances</th>
+            <th>Languages</th>
+            <th>Cities</th>
+            <th>Details</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>SF Streets</strong> <span class="tag sf">Primary</span></td>
+            <td>78 speakers</td>
+            <td>2,262</td>
+            <td>13 unique</td>
+            <td>San Francisco</td>
+            <td>29 boulevard names, "I'm on [STREET]" format</td>
+          </tr>
+          <tr>
+            <td><strong>US Streets</strong> <span class="tag us">Extension</span></td>
+            <td>93 speakers</td>
+            <td>3,600</td>
+            <td>29 unique</td>
+            <td>12 major U.S. cities</td>
+            <td>30 streets per city, 18 prefix variations</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>SF Streets: All 29 San Francisco Boulevards</h3>
+    <div class="street-names-cloud">
+      <span class="street-tag">Alemany</span>
+      <span class="street-tag">Arguello</span>
+      <span class="street-tag">Bay Shore</span>
+      <span class="street-tag">Bernal Heights</span>
+      <span class="street-tag">Cervantes</span>
+      <span class="street-tag">Cesar Chavez</span>
+      <span class="street-tag">Claremont</span>
+      <span class="street-tag">Dewey</span>
+      <span class="street-tag">Diamond Heights</span>
+      <span class="street-tag">Executive Park</span>
+      <span class="street-tag">Font</span>
+      <span class="street-tag">Geary</span>
+      <span class="street-tag">Hunters Point</span>
+      <span class="street-tag">Junipero Serra</span>
+      <span class="street-tag">Laguna Honda</span>
+      <span class="street-tag">Lake Merced</span>
+      <span class="street-tag">Marina</span>
+      <span class="street-tag">Mission Bay</span>
+      <span class="street-tag">Monterey</span>
+      <span class="street-tag">O'Shaughnessy</span>
+      <span class="street-tag">Sloat</span>
+      <span class="street-tag">South Hill</span>
+      <span class="street-tag">St Francis</span>
+      <span class="street-tag">Telegraph Hill</span>
+      <span class="street-tag">Teresita</span>
+      <span class="street-tag">Terry Francois</span>
+      <span class="street-tag">Turk</span>
+      <span class="street-tag">Twin Peaks</span>
+      <span class="street-tag">Washington</span>
+    </div>
+
+    <h3 style="margin-top: 2rem;">US Streets: 12 Cities Represented</h3>
+    <div class="street-names-cloud">
+      <span class="street-tag">Chicago</span>
+      <span class="street-tag">Dallas</span>
+      <span class="street-tag">Houston</span>
+      <span class="street-tag">Jacksonville</span>
+      <span class="street-tag">Los Angeles</span>
+      <span class="street-tag">New York City</span>
+      <span class="street-tag">Philadelphia</span>
+      <span class="street-tag">Phoenix</span>
+      <span class="street-tag">San Antonio</span>
+      <span class="street-tag">San Diego</span>
+      <span class="street-tag">San Francisco</span>
+      <span class="street-tag">San Jose</span>
+    </div>
+  </section>
+
+  <div class="divider"><hr></div>
+
+  <!-- Citation -->
+  <section id="citation" class="reveal">
+    <div class="section-label">Citation</div>
+    <h2>Cite This Work</h2>
+    <p>If you use our datasets or findings in your research, please cite:</p>
+
+    <div class="citation-block">
+      <button class="copy-btn" onclick="copyCitation()"><i class="fa-regular fa-copy"></i> Copy</button>
+<pre>@article{zhou2026sorry,
+  title={"Sorry, I Didn't Catch That": How Speech Models 
+         Miss What Matters Most},
+  author={Zhou, Kaitlyn and Bartelds, Martijn and 
+          Bianchi, Federico and Zou, James},
+  year={2026},
+  note={Preprint}
+}</pre>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer>
+    <p>
+      &copy; 2026 &middot;
+      <a href="mailto:kzhou@together.ai">Kaitlyn Zhou</a> &middot;
+      <a href="https://together.ai" target="_blank">TogetherAI</a> &middot;
+      <a href="https://www.cornell.edu" target="_blank">Cornell</a> &middot;
+      <a href="https://www.stanford.edu" target="_blank">Stanford</a>
+    </p>
+    <p style="margin-top: 0.5rem; font-size: 0.78rem;">
+      Built with care. Template inspired by academic project pages.
+    </p>
+  </footer>
+
+  <script>
+    // Navbar scroll shadow
+    const nav = document.getElementById('navbar');
+    window.addEventListener('scroll', () => {
+      nav.classList.toggle('scrolled', window.scrollY > 10);
+    });
+
+    // Reveal on scroll
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('visible');
+        }
+      });
+    }, { threshold: 0.1, rootMargin: '0px 0px -40px 0px' });
+
+    document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+
+    // Copy citation
+    function copyCitation() {
+      const citation = document.querySelector('.citation-block pre').textContent;
+      navigator.clipboard.writeText(citation).then(() => {
+        const btn = document.querySelector('.copy-btn');
+        btn.innerHTML = '<i class="fa-solid fa-check"></i> Copied!';
+        setTimeout(() => {
+          btn.innerHTML = '<i class="fa-regular fa-copy"></i> Copy';
+        }, 2000);
+      });
+    }
+  </script>
+</body>
+</html>

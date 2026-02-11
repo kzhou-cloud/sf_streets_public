@@ -1,0 +1,20 @@
+{
+    "English": ["English", "ENGLISH", "Old English", "OldEnglish", "Middle English"],
+    "Latin": ["Latin", "Medieval Latin"],
+    "Spanish": ["Spanish"],
+    "French": ["French", "Old French", "OldFrench", "Norman"],
+    "Greek": ["Greek"],
+    "German": ["German", "Germanic", "Old Norse", "Norse", "Proto-Germanic", "Dutch", "Swedish", "Norwegian", "Danish"],
+    "Italian": ["Italian"],
+    "Celtic": ["Scottish", "Irish", "Welsh", "Gaelic", "Celtic", "Scots", "Cornish", "Breton", "Brythonic"],
+    "Semitic": ["Hebrew", "Arabic", "Aramaic", "Semitic", "Persian", "Turkish", "Turkic"],
+    "Native American": ["Algonquian", "Iroquoian", "Lenape", "Ojibwe", "Siouan", "Nahuatl", "Hopi", "Dakota", "Muskogean", "Navajo", "Salish", "Tongva", "Quechua", "Koyukon", "Yuman", "Uto-Aztecan", "Taino", "Taíno", "Sioux", "Shoshone", "Seneca", "O'odham", "Mayan", "Gwich'in", "Creek", "Chumash", "Choctaw", "Chinookan", "Chinook", "Calusa", "Caddo", "Hawaiian", "Apache", "Abenaki", "Comanche", "Catawba", "Aleut", "Inuit", "Indigenous", "Tlingit", "Ohlone", "Miwok", "Mi'kmaq", "Powhatan", "Unami", "Munsee", "Mohave", "Seminole", "Wyandot", "Winnebago", "Washo", "Ute", "Okanagan", "Maliseet", "Jemez", "Iroquois", "Algic", "Native", "Native American"],
+    "Asian": ["Japanese", "Chinese", "Mandarin", "Korean", "Vietnamese", "Malay", "Indonesian", "Tagalog", "Thai", "Hindi", "Sanskrit", "Bengali", "Tamil", "Telugu", "Gujarati", "Kannada", "Urdu", "Burmese", "Sinhalese"],
+    "Other European": ["Portuguese", "Polish", "Russian", "Basque", "Catalan", "Czech", "Slavic", "Romanian", "Serbian", "Lithuanian", "Hungarian", "Estonian", "Albanian"],
+    "African": ["Swahili", "Afrikaans", "Kongo", "Kimbundu", "Bantu", "Berber", "Ethiopian"],
+    "Pacific": ["Polynesian", "Micronesian", "Fijian"],
+    "Inconclusive": ["UNKNOWN", "Unknown", ""],
+    "IS_NUMBERED": ["IS_NUMBERED"],
+    "ERROR": ["ERROR"]
+}
+

@@ -1,0 +1,52 @@
+# Core ML
+torch>=2.0.0
+numpy>=1.24.0
+pandas>=2.0.0
+
+# Audio processing
+openai-whisper>=20231117
+librosa>=0.10.0
+soundfile>=0.12.0
+audioread>=3.0.0
+pydub>=0.25.0
+imageio-ffmpeg>=0.4.0
+scipy>=1.10.0
+
+# HuggingFace ecosystem
+transformers>=4.36.0
+datasets>=2.16.0
+evaluate>=0.4.0
+accelerate>=0.25.0
+peft>=0.17.0
+
+# Cloud Speech-to-Text APIs
+google-cloud-speech>=2.20.0
+deepgram-sdk>=5.0.0
+
+# Voice cloning
+TTS>=0.22.0
+torchaudio>=2.0.0
+cutlet>=0.4.0
+unidic-lite>=1.0.8
+
+# Metrics
+jiwer>=3.0.0
+python-Levenshtein>=0.21.0
+
+# Visualization
+matplotlib>=3.7.0
+seaborn>=0.12.0
+tensorboard>=2.15.0
+wandb>=0.16.0
+
+# Jupyter
+jupyter>=1.0.0
+ipykernel>=6.0.0
+
+# Utilities
+tqdm>=4.65.0
+cmudict>=1.0.0
+
+# System requirement: ffmpeg must be installed separately
+#   macOS: brew install ffmpeg
+#   Linux: apt-get install ffmpeg
