@@ -1,5 +1,7 @@
 # Speech-to-Text Evaluation for Street Names
 
+[![Built with Claude](https://img.shields.io/badge/Built%20with-Claude-D97757?logo=anthropic&logoColor=white)](https://claude.ai)
+
 Evaluating speech-to-text accuracy for U.S. street names across speakers with diverse language backgrounds.
 
 ## Overview
