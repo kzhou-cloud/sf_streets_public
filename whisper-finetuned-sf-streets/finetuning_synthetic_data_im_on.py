@@ -76,6 +76,7 @@ SAMPLE_RATE = 16000
 IM_ON_AUDIO = None
 
 # Participants excluded from test set for data quality reasons
+
 EXCLUDED_PARTICIPANTS = [
     # Add participant IDs here as needed
 ]
