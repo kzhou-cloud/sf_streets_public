@@ -63,6 +63,11 @@ Thumbs.db
 *.swo
 *~
 
+# Generated output files
+google_places/ground_truth_locations.html
+google_places/predicted_locations.html
+google_places/street_comparison_map.pdf
+
 # Environment files
 .env
 .env.local
