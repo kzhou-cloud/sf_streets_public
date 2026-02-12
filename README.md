@@ -10,9 +10,7 @@
 
 Evaluating speech-to-text accuracy for U.S. street names across speakers with diverse language backgrounds.
 
-<p align="center">
-  <img src="figures/fig1_pipeline_overview.png" alt="Pipeline Overview" width="85%">
-</p>
+Dataset soon to be released on Hugging Face.
 
 ## Overview
 
