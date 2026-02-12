@@ -34,29 +34,6 @@ This project investigates how well ASR systems transcribe street names spoken by
 </p>
 <p align="center"><em>Performance variation by speaker language background</em></p>
 
-### Finetuning with Synthetic Data
-
-<p align="center">
-  <img src="figures/fig6_synthetic_pipeline.png" alt="Synthetic Data Pipeline" width="80%">
-</p>
-<p align="center"><em>Voice cloning pipeline for generating synthetic training data</em></p>
-
-<p align="center">
-  <img src="figures/fig7_finetuning_results.png" alt="Finetuning Results" width="80%">
-</p>
-<p align="center"><em>Accuracy improvements from finetuning on synthetic street name audio</em></p>
-
-<p align="center">
-  <img src="figures/fig8_accuracy_model_sizes.png" alt="Accuracy by Model Size" width="80%">
-</p>
-<p align="center"><em>Scaling behavior across Whisper model sizes</em></p>
-
-### Street Name Language Analysis
-
-<p align="center">
-  <img src="figures/fig10_language_heatmap.png" alt="Language Heatmap" width="80%">
-</p>
-<p align="center"><em>Linguistic origins of U.S. street names</em></p>
 
 ## Repository Structure
 
