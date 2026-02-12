@@ -10,7 +10,10 @@
 
 Evaluating speech-to-text accuracy for U.S. street names across speakers with diverse language backgrounds.
 
-Dataset soon to be released on Hugging Face.
+Dataset soon to be released on Hugging Face
+
+https://huggingface.co/datasets/kzhou/sf_streets
+https://huggingface.co/datasets/kzhou/us_streets
 
 ## Overview
 
