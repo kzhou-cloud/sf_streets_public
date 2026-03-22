@@ -88,9 +88,6 @@ def transcribe_with_google(audio_file, model_name):
         creds_data = json.load(f)
         project_id = creds_data.get('project_id')
     
-    if not project_id:
-        raise ValueError("Could not determine project_id from credentials file")
-    
     # Map user-friendly names to Google API model names
     # The actual API uses "latest_long", "latest_short", etc.
     # even though the underlying models are Chirp 3, Chirp 2, etc.
